@@ -16,14 +16,16 @@ import os
 
 if __name__ == '__main__':
 
+    options = pygame.FULLSCREEN|pygame.HWSURFACE|pygame.DOUBLEBUF
+
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
+    screen = pygame.display.set_mode((1200, 800))
     pygame.display.set_caption('Pysometric')
 
-    isoC = IsoCamera(screen.get_rect(), pygame.Rect(0, 0, 800, 600), True)
-    isoG = IsoGrid((70, 35, 39))
+    isoC = IsoCamera(screen.get_rect(), pygame.Rect(0, 0, 1200, 800), True)
+    isoG = IsoGrid((70, 35, 39), debug=True)
     isoC.addGrid('mainGrid', isoG, 0)
-    tile = IsoTile(image=os.path.join('res', 'cube.png'))
+    tile = IsoTile(image=os.path.join('res', 'images', 'cube.png'))
 
     clock = pygame.time.Clock()
 
@@ -35,6 +37,9 @@ if __name__ == '__main__':
 
     tileBlinkB = TileBlinkBehaviour(0.5, 0.5, pygame.Color(255, 0, 0, 50))
     isoG.getTileAt(5, 5, 1).addBehaviour('blink', tileBlinkB)
+
+    pygame.font.init()
+    myFont = pygame.font.Font(os.path.join('res', 'fonts', 'horde.ttf'), 20)
 
     pygame.key.set_repeat(1, 10)
     stop = False
@@ -52,11 +57,16 @@ if __name__ == '__main__':
                     isoC.move((0, 10))
                 if e.key == pygame.K_UP:
                     isoC.move((0, -10))
+            if e.type == pygame.MOUSEBUTTONDOWN:
+                x, y = pygame.mouse.get_pos()
+                print(isoG.cartesianToIso((x + isoC._originRect.x, y + isoC._originRect.y), 0))
 
         isoG.update(deltaTime)
+        fpsSurface = myFont.render(str(int(clock.get_fps())), 0, (255, 0, 0))
 
         screen.fill((0, 0, 0))
         isoC.display(screen)
+        screen.blit(fpsSurface, (10, 10))
         pygame.display.flip()
 
     pygame.quit()
