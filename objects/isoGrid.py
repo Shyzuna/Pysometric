@@ -167,4 +167,7 @@ class IsoGrid(object):
         # Base anchor with custom anchor and removing pivot point of isoTile
         nAnchor = (self._anchor[0] + anchor[0] - (self._cellSize[0] / 2),
                    self._anchor[1] + anchor[1] - (self._cellSize[0] / 2))
-        tileAnchor = (int(anchor[0]/self._cellSize))
+
+
+        if self._debug:
+            self.displayDebug(surface, anchor)

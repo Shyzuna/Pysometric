@@ -25,6 +25,7 @@ if __name__ == '__main__':
     isoC = IsoCamera(screen.get_rect(), pygame.Rect(0, 0, 1200, 800), True)
     isoG = IsoGrid((70, 35, 39), debug=True)
     isoC.addGrid('mainGrid', isoG, 0)
+    isoC.centerCameraOn('mainGrid', (0, 0, 0))
     tile = IsoTile(image=os.path.join('res', 'images', 'cube.png'))
 
     clock = pygame.time.Clock()

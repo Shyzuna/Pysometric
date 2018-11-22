@@ -49,3 +49,11 @@ class IsoCamera(object):
         self._logger.debug('Moving camera by {}'. format(vector))
         x, y = vector
         self._originRect = self._originRect.move(x, y)
+
+
+    def centerCameraOn(self, gridName, isoCoord):
+        if gridName not in self._gridList.keys():
+            self._logger.warning('No Grid named {} : Cannot center on.'.format(gridName))
+            return
+        centerX, centerY = self._gridList[gridName].isoToCartesianCenter(isoCoord)
+        self._originRect.move_ip(centerX - (self._originRect.width / 2), centerY - (self._originRect.height / 2))
