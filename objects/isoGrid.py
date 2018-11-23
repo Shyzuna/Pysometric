@@ -2,7 +2,7 @@
 * Title : isoGrid.py
 * Desc : IsoGrid class
 * Create Date : 15/11/18
-* Last Mod : 21/11/18
+* Last Mod : 23/11/18
 * TODO:
     - Check cellSize in some ways ?
     - Use tile size
@@ -15,7 +15,7 @@
 import logging
 import pygame
 import copy
-
+import math
 
 class IsoGrid(object):
 
@@ -34,6 +34,8 @@ class IsoGrid(object):
         # k,j,i (height, left, right)
         self._tilesList = None
         self._debug = debug
+
+        self._staticSurface = None
 
 
     def addIsoTiles(self, isoTiles, positions=None):
@@ -74,7 +76,7 @@ class IsoGrid(object):
         x, y = cartesian
         i = ((-k * self._cellSize[2] + y) / self._cellSize[1]) + (x / self._cellSize[0])
         j = ((-k * self._cellSize[2] + y) / self._cellSize[1]) - (x / self._cellSize[0])
-        return int(-i), int(-j)
+        return int(-j), int(-i)
 
     def isoToCartesian(self, iso):
         ti = self._cellSize[0] / 2
@@ -157,17 +159,53 @@ class IsoGrid(object):
         if self._debug:
             self.displayDebug(surface, anchor)
 
-
-    def displayRect(self, surface, size, anchor=(0, 0)):
+    def displayRect(self, surface, anchor=(0, 0)):
         if self._tilesList is None:
             self._logger.error('Grid is empty: Nothing to display.')
             if self._debug:
                 self.displayDebug(surface, anchor)
             return
         # Base anchor with custom anchor and removing pivot point of isoTile
-        nAnchor = (self._anchor[0] + anchor[0] - (self._cellSize[0] / 2),
-                   self._anchor[1] + anchor[1] - (self._cellSize[0] / 2))
+        nAnchor = (self._anchor[0] - anchor[0] - (self._cellSize[0] / 2),
+                   self._anchor[1] - anchor[1] - (self._cellSize[0] / 2))
 
+        # Base anchor with custom anchor and removing pivot point of isoTile
+        nAnchor2 = (self._anchor[0] + anchor[0] - (self._cellSize[0] / 2),
+                    self._anchor[1] + anchor[1] - (self._cellSize[0] / 2))
+        x, y = nAnchor
+        x2, y2 = nAnchor2
+
+        margin = 2
+        screenWBlocks = math.ceil(surface.get_width() / self._cellSize[0]) + margin
+        screenHBlocks = math.ceil(surface.get_height() / self._cellSize[1]) + margin
+        ti, tj = self.cartesianToIso(nAnchor, 0)
+        tj += margin
+
+        # default direction is down -> top and back -> front and right -> left
+        # down -> top
+        kDimKeys = list(self._tilesList.keys())
+        kDimKeys.sort()
+        for k in kDimKeys:
+            for h in range(0, screenHBlocks):
+                for w in range(0, screenWBlocks):
+                    isoI = ti + w - ((h/2) if h % 2 == 0 else math.ceil(h/2))
+                    isoJ = tj - w - ((h/2) if h % 2 == 0 else math.floor(h/2))
+                    nx, ny = self.isoToCartesian((isoI, isoJ, k))
+                    try:
+                        surface.blit(self._tilesList[k][isoJ][isoI].getImage(), (nx + x2, -ny + y2))
+                    except Exception as e:
+                        print("out")
 
         if self._debug:
             self.displayDebug(surface, anchor)
+
+    def displayStatic(self, surface, anchor=(0, 0)):
+        if self._staticSurface is None:
+            return
+        surface.blit(self._staticSurface, (0, 0))
+        if self._debug:
+            self.displayDebug(surface, anchor)
+
+    def updateStaticSurface(self, size, anchor=(0, 0)):
+        self._staticSurface = pygame.Surface(size)
+        self.displayRect(self._staticSurface, anchor)
